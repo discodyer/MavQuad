@@ -32,7 +32,7 @@ class BaseDrone:
         pass
 
     def isTimeElapsed(self, delay) -> bool:
-        return datetime.now() - self._last_request > timedelta(second=delay)
+        return datetime.now() - self._last_request > timedelta(seconds=delay)
     
     def updateLastRequestTime(self) -> None:
         self._last_request = datetime.now()
