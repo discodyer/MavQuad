@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import sys
 import time
 
+COLORED_RESULT = lambda result: "\033[92mSuccess\033[0m" if result else "\033[91mFailed\033[0m"
+
 class APMTakeoffState(Enum):
     kLand = auto
     kArmed = auto
