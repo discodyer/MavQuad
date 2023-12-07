@@ -7,13 +7,13 @@ import time
 COLORED_RESULT = lambda result: "\033[92mSuccess\033[0m" if result else "\033[91mFailed\033[0m"
 
 class APMTakeoffState(Enum):
-    kLand = auto
-    kArmed = auto
-    kTakeoff1 = auto
-    kTakeoff2 = auto
+    kLand = auto()
+    kArmed = auto()
+    kTakeoff1 = auto()
+    kTakeoff2 = auto()
 
 class BaseDrone:
-    def __init__(self, device, baud=115200) -> None:
+    def __init__(self, device, baud: int=115200) -> None:
         self._last_request = datetime.now()
         self._connected = False
         self.mav_connection = mavutil.mavlink_connection(device=device, baud=baud)
@@ -88,8 +88,33 @@ class DroneAPM(BaseDrone):
             # Use the attribute
             return msg.result == 0 # MAV_RESULT_ACCEPTED
 
-    def land(self):
-        pass
+    def land(self, timeout = 10):
+        """
+        Sends a command for the drone to land.
+
+        Args:
+            the_connection (mavutil.mavlink_connection): The MAVLink connection to use.
+            timeout (int): Time in seconds to wait for an acknowledgment.
+
+        Returns:
+            int: mavutil.mavlink.MAV_RESULT enum value.
+        """
+
+        # Send a command to land
+        self.mav_connection.mav.command_long_send(
+            self.mav_connection.target_system, 
+            self.mav_connection.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_LAND, 
+            0, 0, 0, 0, 0, 0, 0, 0
+        )
+
+        # Wait for the acknowledgment
+        ack = self.mav_connection.recv_match(type='COMMAND_ACK', blocking=True, timeout=timeout)
+        if ack is None:
+            print('No acknowledgment received within the timeout period.')
+            return False
+
+        return ack.result == 0
 
     def sendGpOrigin(self, latitude = 32.108693377508494, longitude = 118.92943049870283, altitude=0):
         self.mav_connection.mav.set_gps_global_origin_send(self.mav_connection.target_system, int(latitude * 1e7), int(longitude* 1e7), int(altitude*1000))
